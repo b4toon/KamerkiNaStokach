@@ -5,15 +5,20 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Kamerki na stokach</title>
   <style>
-    :root { --bg:#0f1720; --card:#18232f; --text:#e8eef4; --muted:#8aa0b3; }
+    :root { --bg:#0f1720; --card:#18232f; --text:#e8eef4; --muted:#8aa0b3; --accent:#3b9eff; }
     @media (prefers-color-scheme: light) {
-      :root { --bg:#f2f6fa; --card:#ffffff; --text:#14202b; --muted:#5b7080; }
+      :root { --bg:#f2f6fa; --card:#ffffff; --text:#14202b; --muted:#5b7080; --accent:#0a6ed1; }
     }
     * { box-sizing: border-box; }
     body { margin:0; font-family: system-ui, sans-serif; background:var(--bg); color:var(--text); }
     header { padding:24px 16px 8px; max-width:1400px; margin:0 auto; }
     h1 { margin:0 0 4px; font-size:1.6rem; }
     header p { margin:0; color:var(--muted); }
+    nav { max-width:1400px; margin:0 auto; padding:12px 16px 0; display:flex; gap:8px; flex-wrap:wrap; }
+    nav button { font:inherit; color:var(--text); background:var(--card); border:2px solid transparent;
+                 border-radius:999px; padding:8px 18px; cursor:pointer; }
+    nav button[aria-selected="true"] { border-color:var(--accent); font-weight:600; }
+    nav button:focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
     main { max-width:1400px; margin:0 auto; padding:16px;
            display:grid; gap:16px; grid-template-columns:repeat(auto-fit, minmax(min(100%, 480px), 1fr)); }
     figure { margin:0; background:var(--card); border-radius:12px; overflow:hidden; }
@@ -27,33 +32,62 @@
     <h1>Kamerki na stokach</h1>
     <p>Podgląd na żywo z kilku stoków.</p>
   </header>
-  <main id="cams"></main>
+  <nav id="tabs" role="tablist" aria-label="Ośrodki"></nav>
+  <main id="cams" role="tabpanel"></main>
 
   <script>
-    // Dodaj kolejne kamery tutaj: id to koniec adresu
+    // Dodaj ośrodek lub kamerę tutaj. id to koniec adresu
     // https://player.webcamera.pl/<id>
-    const CAMS = [
-      { id: "czarnygron_cam_c0df65", name: "Czarny Groń – stok 2" },
+    const RESORTS = [
+      { key: "czarny-gron", name: "Czarny Groń", cams: [
+        { id: "czarnygron_cam_c0df65", name: "Rzyki – górna stacja" },
+      ]},
+      { key: "master-ski", name: "Master Ski Tylicz", cams: [
+        { id: "masterski_cam_557832", name: "Tylicz – kamera 1" },
+        { id: "masterski_cam_94c295", name: "Tylicz – kamera 2" },
+        { id: "masterski_cam_ce7d7b", name: "Tylicz – kamera 3" },
+        { id: "masterski_cam_0c8ddc", name: "Tylicz – kamera 4 (nowa)" },
+        { id: "masterski_cam_aabee6", name: "Tylicz – widok na wyciąg taśmowy" },
+        { id: "masterski_cam_17fe2a", name: "Tylicz – kamera 6" },
+      ]},
     ];
 
+    const tabs = document.getElementById("tabs");
     const root = document.getElementById("cams");
-    for (const cam of CAMS) {
-      const fig = document.createElement("figure");
-      const wrap = document.createElement("div");
-      wrap.className = "frame";
-      const f = document.createElement("iframe");
-      f.src = "https://player.webcamera.pl/" + encodeURIComponent(cam.id);
-      f.title = cam.name;
-      f.loading = "lazy";
-      f.allowFullscreen = true;
-      f.allow = "autoplay; fullscreen; picture-in-picture";
-      f.setAttribute("frameborder", "0");
-      wrap.appendChild(f);
-      const cap = document.createElement("figcaption");
-      cap.textContent = cam.name;
-      fig.append(wrap, cap);
-      root.appendChild(fig);
+
+    function show(key) {
+      const resort = RESORTS.find(r => r.key === key) || RESORTS[0];
+      for (const b of tabs.children) b.setAttribute("aria-selected", String(b.dataset.key === resort.key));
+      root.replaceChildren(...resort.cams.map(cam => {
+        const fig = document.createElement("figure");
+        const wrap = document.createElement("div");
+        wrap.className = "frame";
+        const f = document.createElement("iframe");
+        f.src = "https://player.webcamera.pl/" + encodeURIComponent(cam.id);
+        f.title = cam.name;
+        f.loading = "lazy";
+        f.allowFullscreen = true;
+        f.allow = "autoplay; fullscreen; picture-in-picture";
+        f.setAttribute("frameborder", "0");
+        wrap.appendChild(f);
+        const cap = document.createElement("figcaption");
+        cap.textContent = cam.name;
+        fig.append(wrap, cap);
+        return fig;
+      }));
+      history.replaceState(null, "", "#" + resort.key);
     }
+
+    for (const r of RESORTS) {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.setAttribute("role", "tab");
+      b.dataset.key = r.key;
+      b.textContent = r.name;
+      b.addEventListener("click", () => show(r.key));
+      tabs.appendChild(b);
+    }
+    show(location.hash.slice(1));
   </script>
 </body>
 </html>
