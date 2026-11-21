@@ -62,7 +62,7 @@
   <div class="wx" id="wx"></div>
   <div class="wxlink" id="wxlink"></div>
   <main id="cams"></main>
-  <footer><span>Zdjęcie w tle: Chamonix, Alpy, <a href="https://www.pexels.com/photo/8253145/" target="_blank" rel="noopener">Pexels</a> · Pogoda: <a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo</a></span></footer>
+  <footer><span>Zdjęcie w tle: Chamonix, Alpy, <a href="https://www.pexels.com/photo/8253145/" target="_blank" rel="noopener">Pexels</a> · Pogoda: <a href="https://www.yr.no/" target="_blank" rel="noopener">Yr.no / MET Norway</a> (zapas: <a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo</a>)</span></footer>
 
   <script>
     // Dodaj ośrodek lub kamerę tutaj.
@@ -210,46 +210,45 @@
         day.className = "day";
         const dt = new Date(d.time[i] + "T12:00:00");
         add(day, "dn", i === 0 ? "dziś" : DAYS[dt.getDay()] + " " + dt.getDate() + "." + (dt.getMonth() + 1 < 10 ? "0" : "") + (dt.getMonth() + 1));
-        add(day, "ic", wxIcon(d.weather_code[i]));
-        add(day, "mx", Math.round(d.temperature_2m_max[i]) + "°");
-        add(day, "mn", Math.round(d.temperature_2m_min[i]) + "°");
-        const sn = d.snowfall_sum[i];
-        add(day, "sn", sn >= 0.5 ? "❄ " + Math.round(sn) + " cm" : "");
+        add(day, "ic", d.icon[i]);
+        add(day, "mx", Math.round(d.tmax[i]) + "°");
+        add(day, "mn", Math.round(d.tmin[i]) + "°");
+        add(day, "sn", d.snow[i] >= 0.5 ? "❄ " + Math.round(d.snow[i]) + " cm" : "");
         box.appendChild(day);
       }
+    }
+    function fromOpenMeteo(d) {
+      return { time: d.time, icon: d.weather_code.map(wxIcon), tmax: d.temperature_2m_max, tmin: d.temperature_2m_min, snow: d.snowfall_sum };
+    }
+    function getJson(url, ok, fail) {
+      const x = new XMLHttpRequest();
+      x.open("GET", url);
+      x.onload = function () {
+        try { if (x.status !== 200) throw 0; ok(JSON.parse(x.responseText)); } catch (e) { fail(); }
+      };
+      x.onerror = fail;
+      x.send();
     }
     function loadWeather(resort) {
       const box = document.getElementById("wx");
       while (box.firstChild) box.removeChild(box.firstChild);
       const lk = document.getElementById("wxlink");
       while (lk.firstChild) lk.removeChild(lk.firstChild);
-      if (resort.lat) {
-        const a = document.createElement("a");
-        a.href = "https://www.yr.no/en/forecast/daily-table/" + resort.lat + "," + resort.lon;
-        a.target = "_blank";
-        a.rel = "noopener";
-        a.textContent = "Pełna prognoza na Yr.no ↗";
-        lk.appendChild(a);
-      }
       if (!resort.lat) return;
-      const ck = "wx2-" + resort.key;
-      try {
-        const c = JSON.parse(localStorage.getItem(ck));
-        if (c && Date.now() - c.t < 30 * 60 * 1000) { drawWeather(c.d); return; }
-      } catch (e) {}
-      const url = "https://api.open-meteo.com/v1/forecast?latitude=" + resort.lat + "&longitude=" + resort.lon +
-        "&daily=weather_code,temperature_2m_max,temperature_2m_min,snowfall_sum&timezone=auto&forecast_days=5";
-      const x = new XMLHttpRequest();
-      x.open("GET", url);
-      x.onload = function () {
-        try {
-          const d = JSON.parse(x.responseText).daily;
-          if (!d || !d.time) return;
-          try { localStorage.setItem(ck, JSON.stringify({ t: Date.now(), d: d })); } catch (e) {}
-          if (currentKey === resort.key) drawWeather(d);
-        } catch (e) {}
-      };
-      x.send();
+      const a = document.createElement("a");
+      a.href = "https://www.yr.no/en/forecast/daily-table/" + resort.lat + "," + resort.lon;
+      a.target = "_blank";
+      a.rel = "noopener";
+      a.textContent = "Pełna prognoza na Yr.no ↗";
+      lk.appendChild(a);
+
+      function show(d) { if (currentKey === resort.key && d && d.time) drawWeather(d); }
+      // główne źródło: Yr.no przez /api/yr (cache na CDN), zapas: Open-Meteo
+      getJson("/api/yr?k=" + encodeURIComponent(resort.key), show, function () {
+        getJson("https://api.open-meteo.com/v1/forecast?latitude=" + resort.lat + "&longitude=" + resort.lon +
+          "&daily=weather_code,temperature_2m_max,temperature_2m_min,snowfall_sum&timezone=auto&forecast_days=5",
+          function (j) { show(fromOpenMeteo(j.daily)); }, function () {});
+      });
     }
 
     function render() {
