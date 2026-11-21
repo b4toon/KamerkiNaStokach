@@ -71,7 +71,12 @@
     let timer = null;
     let currentKey = null;
     let mode = "live";
-    try { if (localStorage.getItem("kns-mode") === "photo") mode = "photo"; } catch (e) {}
+    // Telewizory LG (webOS): wideo z części kamer się nie odtwarza, więc domyślnie pokazuj zdjęcia
+    if (/Web0S|webOS/i.test(navigator.userAgent)) mode = "photo";
+    try {
+      const saved = localStorage.getItem("kns-mode");
+      if (saved === "photo" || saved === "live") mode = saved;
+    } catch (e) {}
 
     function photoUrl(id) {
       return "https://imageserver.webcamera.pl/miniaturki/" + encodeURIComponent(id) + ".jpg?t=" + Date.now();
