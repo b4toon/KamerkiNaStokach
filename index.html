@@ -30,10 +30,10 @@
   <main id="cams"></main>
 
   <script>
-    // Dodaj kolejne kamery tutaj: slug to koniec adresu
-    // https://imageserver.webcamera.pl/umiesc/<slug>
+    // Dodaj kolejne kamery tutaj: id to koniec adresu
+    // https://player.webcamera.pl/<id>
     const CAMS = [
-      { slug: "czarnygron-stok2", name: "Czarny Groń – stok 2" },
+      { id: "czarnygron_cam_c0df65", name: "Czarny Groń – stok 2" },
     ];
 
     const root = document.getElementById("cams");
@@ -42,10 +42,11 @@
       const wrap = document.createElement("div");
       wrap.className = "frame";
       const f = document.createElement("iframe");
-      f.src = "https://imageserver.webcamera.pl/umiesc/" + encodeURIComponent(cam.slug);
+      f.src = "https://player.webcamera.pl/" + encodeURIComponent(cam.id);
       f.title = cam.name;
       f.loading = "lazy";
-      f.scrolling = "no";
+      f.allowFullscreen = true;
+      f.allow = "autoplay; fullscreen; picture-in-picture";
       f.setAttribute("frameborder", "0");
       wrap.appendChild(f);
       const cap = document.createElement("figcaption");
