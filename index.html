@@ -18,6 +18,8 @@
     .bar { max-width:1400px; margin:0 auto; padding:12px 16px 0; display:flex; flex-wrap:wrap; }
     .bar button { margin:0 8px 8px 0; font:inherit; color:var(--text); background:var(--card);
                   border:2px solid transparent; border-radius:999px; padding:8px 18px; cursor:pointer; }
+    .bar button { display:inline-flex; align-items:center; }
+    .tabicon { width:24px; height:24px; margin-right:8px; border-radius:5px; object-fit:contain; background:#fff; }
     .bar button[aria-selected="true"] { border-color:var(--accent); font-weight:600; }
     .bar button:focus { outline:2px solid var(--accent); outline-offset:2px; }
     main { max-width:1400px; margin:0 auto; padding:16px;
@@ -49,11 +51,11 @@
     //  photo = zdjęcie kamery (plakat na TV; kamera bez odtwarzacza pokazuje tylko to zdjęcie)
     //  page  = strona kamery (przycisk "Otwórz na żywo")
     const RESORTS = [
-      { key: "czarny-gron", name: "Czarny Groń", cams: [
+      { key: "czarny-gron", name: "Czarny Groń", icon: "icons/czarny-gron.ico", cams: [
         { id: "czarnygron_cam_c0df65", name: "Rzyki – górna stacja", page: "https://czarnygron-stok2.webcamera.pl/" },
         { id: "czarnygron_cam_961902", name: "Magiczna Osada", page: "https://czarnygron-magiczna-osada.webcamera.pl/" },
       ]},
-      { key: "master-ski", name: "Master Ski Tylicz", cams: [
+      { key: "master-ski", name: "Master Ski Tylicz", icon: "icons/master-ski.png", cams: [
         { id: "masterski_cam_557832", name: "Tylicz – kamera 1", page: "https://masterski-tylicz-3.webcamera.pl/" },
         { id: "masterski_cam_94c295", name: "Tylicz – kamera 2", page: "https://masterski-tylicz-2.webcamera.pl/" },
         { id: "masterski_cam_ce7d7b", name: "Tylicz – kamera 3", page: "https://masterski-tylicz.webcamera.pl/" },
@@ -62,14 +64,14 @@
         { id: "masterski_cam_17fe2a", name: "Tylicz – kamera 6", page: "https://masterski-tylicz-5.webcamera.pl/" },
         { id: "masterski_cam_68446d", name: "Sport – nowa kolej krzesełkowa", page: "https://master-ski-sport.webcamera.pl/" },
       ]},
-      { key: "slotwiny-arena", name: "Słotwiny Arena", cams: [
+      { key: "slotwiny-arena", name: "Słotwiny Arena", icon: "icons/slotwiny-arena.png", cams: [
         { id: "moit_cam_90a8ae", name: "Słotwiny Arena – Krynica-Zdrój", page: "https://slotwinyarena-2.webcamera.pl/" },
         { id: "moit_cam_0b9f47", name: "Słotwiny Arena – widok z górnej stacji", page: "https://slotwinyarena.webcamera.pl/" },
         { id: "moit_cam_79802a", name: "Słotwiny Arena – kolej krzesełkowa Słotwinka", page: "https://slotwiny-arena-slotwinka.webcamera.pl/" },
         // bez odtwarzacza do osadzenia (webcamera.pl przekierowuje na widget): zdjęcie + link
         { name: "Kompleks Narciarski Słotwiny", photo: "https://imageserver.webcamera.pl/miniaturki/slotwiny_cam_9eda48.jpg", page: "https://slotwiny.webcamera.pl/" },
       ]},
-      { key: "jaworzyna-krynicka", name: "Jaworzyna Krynicka", cams: [
+      { key: "jaworzyna-krynicka", name: "Jaworzyna Krynicka", icon: "icons/jaworzyna-krynicka.png", cams: [
         // źródło: https://jaworzynakrynicka.pl/kamery-live/ (te same odtwarzacze webcamera.pl)
         { id: "skywind_cam_0d9bf2", name: "Jaworzyna – kamera 1", page: "https://jaworzynakrynicka.pl/kamery-live/" },
         { id: "skywind_cam_77d44a", name: "Jaworzyna – kamera 2", page: "https://jaworzynakrynicka.pl/kamery-live/" },
@@ -80,7 +82,7 @@
         { id: "skywind_cam_b8cc02", name: "Jaworzyna – kolej Harnaś Express", page: "https://jaworzynakrynicka.pl/kamery-live/" },
         { id: "skywind_cam_449b41", name: "Jaworzyna – dolna stacja", page: "https://jaworzynakrynicka.pl/kamery-live/" },
       ]},
-      { key: "zieleniec", name: "Zieleniec", cams: [
+      { key: "zieleniec", name: "Zieleniec", icon: "icons/zieleniec.png", cams: [
         { id: "skywind_cam_809945", name: "Winterpol W3 – górna stacja", page: "https://zieleniec.webcamera.pl/" },
         { id: "zieleniec_cam_b059be", name: "Winterpol W3", page: "https://zieleniec-2.webcamera.pl/" },
         { id: "zieleniec_cam_79fa00", name: "Winterpol W3 – dolna stacja", page: "https://zieleniec-3.webcamera.pl/" },
@@ -88,10 +90,10 @@
         { id: "zieleniec_cam_e77d95", name: "Winterpol – wyciąg W5", page: "https://zieleniec-6.webcamera.pl/" },
         { id: "gryglowka_cam_a7853c", name: "Gryglówka – stacja dolna", page: "https://gryglowka-zieleniec.webcamera.pl/" },
       ]},
-      { key: "kamianna-ski", name: "Kamianna Ski", cams: [
+      { key: "kamianna-ski", name: "Kamianna Ski", icon: "icons/kamianna-ski.png", cams: [
         { id: "kamiannaski_cam_290b91", name: "KamiannaSki – stok", page: "https://kamianna-ski.webcamera.pl/" },
       ]},
-      { key: "bialka-tatrzanska", name: "Białka Tatrzańska", cams: [
+      { key: "bialka-tatrzanska", name: "Białka Tatrzańska", icon: "icons/bialka-tatrzanska.ico", cams: [
         // Kotelnica Białczańska: https://bialkatatrzanska.pl/kamery/ (te same odtwarzacze webcamera.pl)
         { id: "skywind_cam_772102", name: "Kotelnica Białczańska", page: "https://bialkatatrzanska.webcamera.pl/" },
         { id: "kotelnica_cam_0b240f", name: "Kotelnica – Remiaszów", page: "https://kotelnica.webcamera.pl/" },
@@ -103,7 +105,7 @@
         { id: "kotelnica_cam_e91305", name: "Stok – szkoła narciarska Kotelnica i Bania", page: "https://kotelnica-szkola-stok.webcamera.pl/" },
       ]},
       // San Diego Zoo: oficjalny odtwarzacz Camzone (ten sam iframe, którego używa strona zoo)
-      { key: "panda-san-diego", name: "Panda – San Diego Zoo", cams: [
+      { key: "panda-san-diego", name: "Panda – San Diego Zoo", icon: "icons/panda-san-diego.ico", cams: [
         { name: "Giant Panda Cam – San Diego Zoo",
           src: "https://zssd-panda2024.secureplayer.camzonecdn.com/v1.3/CamzoneStreamPlayer?iframe=yes&channel=zssd-panda2024&muted=yes&mutebutton=no&czlogourl=&toolbar=always&backgroundcolor=000000&toolbarbgcolor=ffffff&toolbaralpha=100&toolbartextcolor=000000&epostcard=yes&toolbartype=new&toolbarposition=topright",
           photo: "https://zssd-panda2024.preview.api.camzonecdn.com/previewimage",
@@ -211,7 +213,14 @@
       b.type = "button";
       b.setAttribute("role", "tab");
       b.dataset.key = r.key;
-      b.textContent = r.name;
+      if (r.icon) {
+        const ic = document.createElement("img");
+        ic.src = r.icon;
+        ic.alt = "";
+        ic.className = "tabicon";
+        b.appendChild(ic);
+      }
+      b.appendChild(document.createTextNode(r.name));
       b.addEventListener("click", function () { currentKey = r.key; render(); });
       tabs.appendChild(b);
     });
