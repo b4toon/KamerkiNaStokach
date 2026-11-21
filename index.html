@@ -30,6 +30,9 @@
     figcaption a { color:var(--accent); text-decoration:none; font-weight:600; padding:6px 0 6px 12px; }
     figcaption a:focus { outline:2px solid var(--accent); }
     .stamp { color:var(--muted); font-size:.8rem; }
+    .playbtn { position:absolute; top:0; left:0; right:0; bottom:0; width:100%; height:100%; border:0; cursor:pointer;
+               background:rgba(0,0,0,.35); color:#fff; font:inherit; font-size:1.6rem; font-weight:600; }
+    .playbtn:focus { outline:4px solid var(--accent); outline-offset:-4px; }
     .frame .ph { position:absolute; top:0; left:0; right:0; bottom:0; display:flex; flex-direction:column;
                  align-items:center; justify-content:center; text-align:center; padding:12px; color:#fff;
                  background:linear-gradient(135deg,#1c2b3a,#0b1218); }
@@ -89,12 +92,14 @@
 
     // ---------- DEBUG ----------
     const dbgEl = document.getElementById("dbg");
-    let debugOn = /Web0S|webOS/i.test(navigator.userAgent) || /[?&]debug=1/.test(location.search);
+    // Telewizory: LG webOS ("Web0S"), starsze LG ("NetCast"), inne Smart TV ("SmartTV"). ?tv=1 wymusza tryb TV.
+    const IS_TV = /Web0S|webOS|NetCast|SmartTV|Colt\//i.test(navigator.userAgent) || /[?&]tv=1/.test(location.search);
+    let debugOn = IS_TV || /[?&]debug=1/.test(location.search);
     const info = [];
     const logs = [];
     function paintDbg() {
       dbgEl.className = debugOn ? "on" : "";
-      dbgEl.textContent = "DEBUG (wersja strony 7)\n" + info.join("\n") + "\n--- zdarzenia ---\n" + logs.join("\n");
+      dbgEl.textContent = "DEBUG (wersja strony 8)\n" + info.join("\n") + "\n--- zdarzenia ---\n" + logs.join("\n");
       dbgEl.scrollTop = dbgEl.scrollHeight;
     }
     function dbg(msg) { logs.push(hhmm() + " " + msg); if (logs.length > 60) logs.shift(); paintDbg(); }
@@ -138,9 +143,10 @@
         });
       } else { info.push("mediaCapabilities: brak"); }
     })();
+    // Na TV tryb "live" = zdjęcie + przycisk Odtwórz, wideo tylko jednej kamery naraz
+    // (telewizory zwykle mają sprzętowy dekoder na 1-2 strumienie naraz).
     let mode = "live";
-    // Telewizory LG (webOS): wideo z części kamer się nie odtwarza, więc domyślnie pokazuj zdjęcia
-    if (/Web0S|webOS/i.test(navigator.userAgent)) mode = "photo";
+    let activeLive = null;
     try {
       const saved = localStorage.getItem("kns-mode");
       if (saved === "photo" || saved === "live") mode = saved;
@@ -155,10 +161,25 @@
       return ("0" + d.getHours()).slice(-2) + ":" + ("0" + d.getMinutes()).slice(-2) + ":" + ("0" + d.getSeconds()).slice(-2);
     }
 
+    function makeIframe(cam, camKey) {
+      const f = document.createElement("iframe");
+      f.src = cam.src || ("https://player.webcamera.pl/" + encodeURIComponent(cam.id));
+      f.title = cam.name;
+      f.loading = "lazy";
+      f.allowFullscreen = true;
+      f.allow = "autoplay; fullscreen; picture-in-picture";
+      f.setAttribute("frameborder", "0");
+      const t0 = Date.now();
+      f.onload = function () { dbg("iframe OK " + camKey + " (" + (Date.now() - t0) + " ms)"); };
+      f.onerror = function () { dbg("iframe BŁĄD " + camKey); };
+      return f;
+    }
+
     function render() {
       const resort = RESORTS.find(function (r) { return r.key === currentKey; }) || RESORTS[0];
       currentKey = resort.key;
       if (timer) { clearInterval(timer); timer = null; }
+      activeLive = null;
 
       Array.prototype.forEach.call(tabs.children, function (b) {
         b.setAttribute("aria-selected", String(b.dataset.key === currentKey));
@@ -186,18 +207,34 @@
           ph.appendChild(b1);
           ph.appendChild(s1);
           wrap.appendChild(ph);
+        } else if (mode === "live" && IS_TV) {
+          // TV: zdjęcie + Odtwórz; uruchomienie jednej kamery zatrzymuje poprzednią
+          const img = document.createElement("img");
+          img.alt = cam.name;
+          img.src = photoUrl(cam);
+          img.onerror = function () { dbg("zdjęcie BŁĄD " + camKey); };
+          const btn = document.createElement("button");
+          btn.type = "button";
+          btn.className = "playbtn";
+          btn.textContent = "▶ Odtwórz";
+          btn.addEventListener("click", function () {
+            if (activeLive) activeLive.stop();
+            const f = makeIframe(cam, camKey);
+            wrap.appendChild(f);
+            img.style.display = "none";
+            btn.style.display = "none";
+            activeLive = { stop: function () {
+              wrap.removeChild(f);
+              img.style.display = "";
+              btn.style.display = "";
+              dbg("zatrzymano " + camKey);
+            } };
+            dbg("start wideo " + camKey + " (jedna kamera naraz)");
+          });
+          wrap.appendChild(img);
+          wrap.appendChild(btn);
         } else if (mode === "live") {
-          const f = document.createElement("iframe");
-          f.src = cam.src || ("https://player.webcamera.pl/" + encodeURIComponent(cam.id));
-          f.title = cam.name;
-          f.loading = "lazy";
-          f.allowFullscreen = true;
-          f.allow = "autoplay; fullscreen; picture-in-picture";
-          f.setAttribute("frameborder", "0");
-          const t0 = Date.now();
-          f.onload = function () { dbg("iframe OK " + camKey + " (" + (Date.now() - t0) + " ms)"); };
-          f.onerror = function () { dbg("iframe BŁĄD " + camKey); };
-          wrap.appendChild(f);
+          wrap.appendChild(makeIframe(cam, camKey));
         } else {
           const img = document.createElement("img");
           img.alt = cam.name;
