@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Kamerki na stokach</title>
+  <style>
+    :root { --bg:#0f1720; --card:#18232f; --text:#e8eef4; --muted:#8aa0b3; }
+    @media (prefers-color-scheme: light) {
+      :root { --bg:#f2f6fa; --card:#ffffff; --text:#14202b; --muted:#5b7080; }
+    }
+    * { box-sizing: border-box; }
+    body { margin:0; font-family: system-ui, sans-serif; background:var(--bg); color:var(--text); }
+    header { padding:24px 16px 8px; max-width:1400px; margin:0 auto; }
+    h1 { margin:0 0 4px; font-size:1.6rem; }
+    header p { margin:0; color:var(--muted); }
+    main { max-width:1400px; margin:0 auto; padding:16px;
+           display:grid; gap:16px; grid-template-columns:repeat(auto-fit, minmax(min(100%, 480px), 1fr)); }
+    figure { margin:0; background:var(--card); border-radius:12px; overflow:hidden; }
+    .frame { position:relative; aspect-ratio:16/9; }
+    .frame iframe { position:absolute; inset:0; width:100%; height:100%; border:0; }
+    figcaption { padding:10px 14px; font-size:.95rem; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Kamerki na stokach</h1>
+    <p>Podgląd na żywo z kilku stoków.</p>
+  </header>
+  <main id="cams"></main>
+
+  <script>
+    // Dodaj kolejne kamery tutaj: slug to koniec adresu
+    // https://imageserver.webcamera.pl/umiesc/<slug>
+    const CAMS = [
+      { slug: "czarnygron-stok2", name: "Czarny Groń – stok 2" },
+    ];
+
+    const root = document.getElementById("cams");
+    for (const cam of CAMS) {
+      const fig = document.createElement("figure");
+      const wrap = document.createElement("div");
+      wrap.className = "frame";
+      const f = document.createElement("iframe");
+      f.src = "https://imageserver.webcamera.pl/umiesc/" + encodeURIComponent(cam.slug);
+      f.title = cam.name;
+      f.loading = "lazy";
+      f.scrolling = "no";
+      f.setAttribute("frameborder", "0");
+      wrap.appendChild(f);
+      const cap = document.createElement("figcaption");
+      cap.textContent = cam.name;
+      fig.append(wrap, cap);
+      root.appendChild(fig);
+    }
+  </script>
+</body>
+</html>
