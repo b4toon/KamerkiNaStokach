@@ -1,8 +1,10 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
   <rect width="64" height="64" rx="14" fill="#1b6fd1"/>
   <!-- narty -->
-  <path d="M3 47.5Q4.5 45 8 46Q11 47 13 49.5H58a2.5 2.5 0 0 1 0 5H13Q5 54.5 3 47.5Z" fill="#ffb703"/>
-  <path d="M7 55.5Q8.5 53 12 54Q15 55 17 57.5H56a2.5 2.5 0 0 1 0 5H17Q9 62.5 7 55.5Z" fill="#ffffff"/>
+  <path d="M3 49Q4 46 8 47Q11.5 48 14 51.5H50Q52.5 48 56 47Q60 46 61 49Q62 55 57 58H7Q2 55 3 49Z" fill="#ff7a1a"/>
+  <path d="M14 55H50" stroke="#ffffff" stroke-width="2.6" stroke-linecap="round"/>
+  <rect x="19" y="49.5" width="8" height="4" rx="1.6" fill="#222"/>
+  <rect x="37" y="49.5" width="8" height="4" rx="1.6" fill="#222"/>
   <!-- uszy -->
   <circle cx="17" cy="14" r="7" fill="#111"/>
   <circle cx="47" cy="14" r="7" fill="#111"/>
