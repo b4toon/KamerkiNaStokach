@@ -30,6 +30,11 @@
     figcaption a { color:var(--accent); text-decoration:none; font-weight:600; padding:6px 0 6px 12px; }
     figcaption a:focus { outline:2px solid var(--accent); }
     .stamp { color:var(--muted); font-size:.8rem; }
+    .frame .ph { position:absolute; top:0; left:0; right:0; bottom:0; display:flex; flex-direction:column;
+                 align-items:center; justify-content:center; text-align:center; padding:12px; color:#fff;
+                 background:linear-gradient(135deg,#1c2b3a,#0b1218); }
+    .frame .ph b { font-size:1.15rem; margin-bottom:6px; }
+    .frame .ph span { color:#b7c4d0; font-size:.9rem; }
     #dbg { display:none; position:fixed; left:0; right:0; bottom:0; max-height:45vh; overflow:auto; z-index:99;
            margin:0; padding:8px 12px; background:rgba(0,0,0,.92); color:#9fe870; font:14px/1.35 monospace; white-space:pre-wrap; }
     #dbg.on { display:block; }
@@ -65,6 +70,18 @@
       ]},
       { key: "slotwiny-arena", name: "Słotwiny Arena", cams: [
         { id: "moit_cam_90a8ae", name: "Słotwiny Arena – Krynica-Zdrój", page: "https://slotwinyarena-2.webcamera.pl/" },
+      ]},
+      // Pandy z Chengdu (ipanda.com): brak osadzenia, tylko linki do kamer
+      { key: "pandy-chengdu", name: "Pandy – Chengdu", cams: [
+        { name: "Dorosła panda – kamera A", page: "https://en.ipanda.com/live/chengdu/01/" },
+        { name: "Willa nr 1 – kamera A", page: "https://en.ipanda.com/live/chengdu/09/" },
+        { name: "Willa nr 1 – kamera B", page: "https://en.ipanda.com/live/chengdu/10/" },
+        { name: "Willa nr 6 – kamera A", page: "https://en.ipanda.com/live/chengdu/03/" },
+        { name: "Willa nr 6 – kamera B", page: "https://en.ipanda.com/live/chengdu/04/" },
+        { name: "Młode pandy – kamera A", page: "https://en.ipanda.com/live/chengdu/05/" },
+        { name: "Młode pandy – kamera B", page: "https://en.ipanda.com/live/chengdu/06/" },
+        { name: "Mama z młodymi – kamera A", page: "https://en.ipanda.com/live/chengdu/07/" },
+        { name: "Mama z młodymi – kamera B", page: "https://en.ipanda.com/live/chengdu/08/" },
       ]},
     ];
 
@@ -161,7 +178,18 @@
         const wrap = document.createElement("div");
         wrap.className = "frame";
 
-        if (mode === "live") {
+        if (!cam.id) {
+          // kamera bez osadzenia: karta z linkiem do strony źródłowej
+          const ph = document.createElement("div");
+          ph.className = "ph";
+          const b1 = document.createElement("b");
+          b1.textContent = cam.name;
+          const s1 = document.createElement("span");
+          s1.textContent = "Transmisja tylko na stronie źródłowej";
+          ph.appendChild(b1);
+          ph.appendChild(s1);
+          wrap.appendChild(ph);
+        } else if (mode === "live") {
           const f = document.createElement("iframe");
           f.src = "https://player.webcamera.pl/" + encodeURIComponent(cam.id);
           f.title = cam.name;
@@ -187,7 +215,7 @@
         const cap = document.createElement("figcaption");
         const label = document.createElement("span");
         label.textContent = cam.name + " ";
-        if (mode === "photo") {
+        if (mode === "photo" && cam.id) {
           const st = document.createElement("span");
           st.className = "stamp";
           st.textContent = "(" + hhmm() + ")";
