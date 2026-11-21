@@ -36,6 +36,9 @@
     .wx .mx { font-weight:600; }
     .wx .mn { color:var(--muted); }
     .wx .sn { color:var(--accent); font-size:.8rem; min-height:1.1em; }
+    .wxlink { max-width:1400px; margin:0 auto; padding:0 16px; font-size:.85rem; }
+    .wxlink a { display:inline-block; padding:4px 10px; border-radius:8px; background:var(--card); color:var(--accent); text-decoration:none; font-weight:600; }
+    .wxlink a:focus { outline:2px solid var(--accent); }
     main { max-width:1400px; margin:0 auto; padding:16px;
            display:grid; gap:16px; grid-template-columns:repeat(auto-fit, minmax(300px, 1fr)); }
     @media (min-width:1200px) { main { grid-template-columns:repeat(auto-fit, minmax(480px, 1fr)); } }
@@ -57,6 +60,7 @@
   </header>
   <div class="bar" id="tabs" role="tablist" aria-label="Ośrodki"></div>
   <div class="wx" id="wx"></div>
+  <div class="wxlink" id="wxlink"></div>
   <main id="cams"></main>
   <footer><span>Zdjęcie w tle: Chamonix, Alpy, <a href="https://www.pexels.com/photo/8253145/" target="_blank" rel="noopener">Pexels</a> · Pogoda: <a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo</a></span></footer>
 
@@ -217,6 +221,16 @@
     function loadWeather(resort) {
       const box = document.getElementById("wx");
       while (box.firstChild) box.removeChild(box.firstChild);
+      const lk = document.getElementById("wxlink");
+      while (lk.firstChild) lk.removeChild(lk.firstChild);
+      if (resort.lat) {
+        const a = document.createElement("a");
+        a.href = "https://www.yr.no/en/forecast/daily-table/" + resort.lat + "," + resort.lon;
+        a.target = "_blank";
+        a.rel = "noopener";
+        a.textContent = "Pełna prognoza na Yr.no ↗";
+        lk.appendChild(a);
+      }
       if (!resort.lat) return;
       const ck = "wx2-" + resort.key;
       try {
