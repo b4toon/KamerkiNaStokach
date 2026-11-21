@@ -14,18 +14,22 @@
     header { padding:24px 16px 8px; max-width:1400px; margin:0 auto; }
     h1 { margin:0 0 4px; font-size:1.6rem; }
     header p { margin:0; color:var(--muted); }
-    nav { max-width:1400px; margin:0 auto; padding:12px 16px 0; display:flex; flex-wrap:wrap; }
-    nav button { margin:0 8px 8px 0; font:inherit; color:var(--text); background:var(--card); border:2px solid transparent;
-                 border-radius:999px; padding:8px 18px; cursor:pointer; }
-    nav button[aria-selected="true"] { border-color:var(--accent); font-weight:600; }
-    nav button:focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
+    .bar { max-width:1400px; margin:0 auto; padding:12px 16px 0; display:flex; flex-wrap:wrap; justify-content:space-between; }
+    .group { display:flex; flex-wrap:wrap; }
+    .bar button { margin:0 8px 8px 0; font:inherit; color:var(--text); background:var(--card);
+                  border:2px solid transparent; border-radius:999px; padding:8px 18px; cursor:pointer; }
+    .bar button[aria-selected="true"], .bar button[aria-pressed="true"] { border-color:var(--accent); font-weight:600; }
+    .bar button:focus { outline:2px solid var(--accent); outline-offset:2px; }
     main { max-width:1400px; margin:0 auto; padding:16px;
            display:grid; gap:16px; grid-template-columns:repeat(auto-fit, minmax(300px, 1fr)); }
     @media (min-width:1200px) { main { grid-template-columns:repeat(auto-fit, minmax(480px, 1fr)); } }
     figure { margin:0; background:var(--card); border-radius:12px; overflow:hidden; }
-    .frame { position:relative; width:100%; height:0; padding-bottom:56.25%; }
-    .frame iframe { position:absolute; top:0; left:0; right:0; bottom:0; width:100%; height:100%; border:0; }
-    figcaption { padding:10px 14px; font-size:.95rem; }
+    .frame { position:relative; width:100%; height:0; padding-bottom:56.25%; background:#000; }
+    .frame iframe, .frame img { position:absolute; top:0; left:0; right:0; bottom:0; width:100%; height:100%; border:0; object-fit:cover; }
+    figcaption { padding:10px 14px; font-size:.95rem; display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; }
+    figcaption a { color:var(--accent); text-decoration:none; font-weight:600; padding:6px 0 6px 12px; }
+    figcaption a:focus { outline:2px solid var(--accent); }
+    .stamp { color:var(--muted); font-size:.8rem; }
   </style>
 </head>
 <body>
@@ -33,67 +37,142 @@
     <h1>Kamerki na stokach</h1>
     <p>Podgląd na żywo z kilku stoków.</p>
   </header>
-  <nav id="tabs" role="tablist" aria-label="Ośrodki"></nav>
-  <main id="cams" role="tabpanel"></main>
+  <div class="bar">
+    <div class="group" id="tabs" role="tablist" aria-label="Ośrodki"></div>
+    <div class="group" id="modes" aria-label="Tryb podglądu"></div>
+  </div>
+  <main id="cams"></main>
 
   <script>
-    // Dodaj ośrodek lub kamerę tutaj. id to koniec adresu
-    // https://player.webcamera.pl/<id>
+    // Dodaj ośrodek lub kamerę tutaj.
+    //  id   = koniec adresu https://player.webcamera.pl/<id> (to samo id jest w zdjęciu)
+    //  page = strona kamery w webcamera.pl (przycisk "Otwórz na żywo")
     const RESORTS = [
       { key: "czarny-gron", name: "Czarny Groń", cams: [
-        { id: "czarnygron_cam_c0df65", name: "Rzyki – górna stacja" },
+        { id: "czarnygron_cam_c0df65", name: "Rzyki – górna stacja", page: "https://czarnygron-stok2.webcamera.pl/" },
       ]},
       { key: "master-ski", name: "Master Ski Tylicz", cams: [
-        { id: "masterski_cam_557832", name: "Tylicz – kamera 1" },
-        { id: "masterski_cam_94c295", name: "Tylicz – kamera 2" },
-        { id: "masterski_cam_ce7d7b", name: "Tylicz – kamera 3" },
-        { id: "masterski_cam_0c8ddc", name: "Tylicz – kamera 4 (nowa)" },
-        { id: "masterski_cam_aabee6", name: "Tylicz – widok na wyciąg taśmowy" },
-        { id: "masterski_cam_17fe2a", name: "Tylicz – kamera 6" },
+        { id: "masterski_cam_557832", name: "Tylicz – kamera 1", page: "https://masterski-tylicz-3.webcamera.pl/" },
+        { id: "masterski_cam_94c295", name: "Tylicz – kamera 2", page: "https://masterski-tylicz-2.webcamera.pl/" },
+        { id: "masterski_cam_ce7d7b", name: "Tylicz – kamera 3", page: "https://masterski-tylicz.webcamera.pl/" },
+        { id: "masterski_cam_0c8ddc", name: "Tylicz – kamera 4 (nowa)", page: "https://masterski-tylicz-4.webcamera.pl/" },
+        { id: "masterski_cam_aabee6", name: "Tylicz – widok na wyciąg taśmowy", page: "https://master-ski.pl/kamery/" },
+        { id: "masterski_cam_17fe2a", name: "Tylicz – kamera 6", page: "https://masterski-tylicz-5.webcamera.pl/" },
       ]},
       { key: "slotwiny-arena", name: "Słotwiny Arena", cams: [
-        { id: "moit_cam_90a8ae", name: "Słotwiny Arena – Krynica-Zdrój" },
+        { id: "moit_cam_90a8ae", name: "Słotwiny Arena – Krynica-Zdrój", page: "https://slotwinyarena-2.webcamera.pl/" },
       ]},
     ];
 
+    const REFRESH_MS = 30000;
     const tabs = document.getElementById("tabs");
+    const modesEl = document.getElementById("modes");
     const root = document.getElementById("cams");
+    let timer = null;
+    let currentKey = null;
+    let mode = "live";
+    try { if (localStorage.getItem("kns-mode") === "photo") mode = "photo"; } catch (e) {}
 
-    function show(key) {
-      const resort = RESORTS.find(r => r.key === key) || RESORTS[0];
-      for (const b of tabs.children) b.setAttribute("aria-selected", String(b.dataset.key === resort.key));
+    function photoUrl(id) {
+      return "https://imageserver.webcamera.pl/miniaturki/" + encodeURIComponent(id) + ".jpg?t=" + Date.now();
+    }
+    function hhmm() {
+      const d = new Date();
+      return ("0" + d.getHours()).slice(-2) + ":" + ("0" + d.getMinutes()).slice(-2) + ":" + ("0" + d.getSeconds()).slice(-2);
+    }
+
+    function render() {
+      const resort = RESORTS.find(function (r) { return r.key === currentKey; }) || RESORTS[0];
+      currentKey = resort.key;
+      if (timer) { clearInterval(timer); timer = null; }
+
+      Array.prototype.forEach.call(tabs.children, function (b) {
+        b.setAttribute("aria-selected", String(b.dataset.key === currentKey));
+      });
+      Array.prototype.forEach.call(modesEl.children, function (b) {
+        b.setAttribute("aria-pressed", String(b.dataset.mode === mode));
+      });
+
       while (root.firstChild) root.removeChild(root.firstChild);
+      const photos = [];
       resort.cams.forEach(function (cam) {
         const fig = document.createElement("figure");
         const wrap = document.createElement("div");
         wrap.className = "frame";
-        const f = document.createElement("iframe");
-        f.src = "https://player.webcamera.pl/" + encodeURIComponent(cam.id);
-        f.title = cam.name;
-        f.loading = "lazy";
-        f.allowFullscreen = true;
-        f.allow = "autoplay; fullscreen; picture-in-picture";
-        f.setAttribute("frameborder", "0");
-        wrap.appendChild(f);
+
+        if (mode === "live") {
+          const f = document.createElement("iframe");
+          f.src = "https://player.webcamera.pl/" + encodeURIComponent(cam.id);
+          f.title = cam.name;
+          f.loading = "lazy";
+          f.allowFullscreen = true;
+          f.allow = "autoplay; fullscreen; picture-in-picture";
+          f.setAttribute("frameborder", "0");
+          wrap.appendChild(f);
+        } else {
+          const img = document.createElement("img");
+          img.alt = cam.name;
+          img.src = photoUrl(cam.id);
+          wrap.appendChild(img);
+          photos.push({ id: cam.id, img: img });
+        }
+
         const cap = document.createElement("figcaption");
-        cap.textContent = cam.name;
+        const label = document.createElement("span");
+        label.textContent = cam.name + " ";
+        if (mode === "photo") {
+          const st = document.createElement("span");
+          st.className = "stamp";
+          st.textContent = "(" + hhmm() + ")";
+          label.appendChild(st);
+          photos[photos.length - 1].stamp = st;
+        }
+        cap.appendChild(label);
+        const a = document.createElement("a");
+        a.href = cam.page;
+        a.target = "_blank";
+        a.rel = "noopener";
+        a.textContent = "Otwórz na żywo ↗";
+        cap.appendChild(a);
+
         fig.appendChild(wrap);
         fig.appendChild(cap);
         root.appendChild(fig);
       });
-      history.replaceState(null, "", "#" + resort.key);
+
+      if (photos.length) {
+        timer = setInterval(function () {
+          photos.forEach(function (p) { p.img.src = photoUrl(p.id); p.stamp.textContent = "(" + hhmm() + ")"; });
+        }, REFRESH_MS);
+      }
+      history.replaceState(null, "", "#" + currentKey);
     }
 
-    for (const r of RESORTS) {
+    RESORTS.forEach(function (r) {
       const b = document.createElement("button");
       b.type = "button";
       b.setAttribute("role", "tab");
       b.dataset.key = r.key;
       b.textContent = r.name;
-      b.addEventListener("click", () => show(r.key));
+      b.addEventListener("click", function () { currentKey = r.key; render(); });
       tabs.appendChild(b);
-    }
-    show(location.hash.slice(1));
+    });
+
+    [["live", "Wideo na żywo"], ["photo", "Zdjęcia (co 30 s)"]].forEach(function (m) {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.dataset.mode = m[0];
+      b.textContent = m[1];
+      b.addEventListener("click", function () {
+        mode = m[0];
+        try { localStorage.setItem("kns-mode", mode); } catch (e) {}
+        render();
+      });
+      modesEl.appendChild(b);
+    });
+
+    currentKey = location.hash.slice(1);
+    render();
   </script>
 </body>
 </html>
