@@ -11,12 +11,17 @@
       :root { --bg:#f2f6fa; --card:#ffffff; --text:#14202b; --muted:#5b7080; --accent:#0a6ed1; }
     }
     * { box-sizing: border-box; }
+    :root { --veil:rgba(8,18,32,.58); }
+    @media (prefers-color-scheme: light) { :root { --veil:rgba(255,255,255,.12); } }
     body { margin:0; font-family: system-ui, sans-serif; color:var(--text); min-height:100vh;
-           background:var(--bg) url(background.svg?v=1) center bottom / cover no-repeat fixed; }
+           background:linear-gradient(var(--veil), var(--veil)), var(--bg) url(bg-alps.jpg?v=1) center / cover no-repeat fixed; }
+    footer { max-width:1400px; margin:0 auto; padding:8px 16px 24px; font-size:.8rem; }
+    footer span { display:inline-block; padding:4px 10px; border-radius:8px; background:var(--card); color:var(--text); opacity:.9; }
+    footer a { color:inherit; }
     header { padding:24px 16px 8px; max-width:1400px; margin:0 auto; }
     h1 { margin:0 0 4px; font-size:1.6rem; display:flex; align-items:center; }
     .logo { width:44px; height:44px; margin-right:12px; flex:none; }
-    header p { margin:0; color:var(--muted); }
+    header p { margin:0; color:var(--text); opacity:.8; }
     .bar { max-width:1400px; margin:0 auto; padding:12px 16px 0; display:flex; flex-wrap:wrap; }
     .bar button { margin:0 8px 8px 0; font:inherit; color:var(--text); background:var(--card);
                   border:2px solid transparent; border-radius:999px; padding:8px 18px; cursor:pointer; }
@@ -45,6 +50,7 @@
   </header>
   <div class="bar" id="tabs" role="tablist" aria-label="Ośrodki"></div>
   <main id="cams"></main>
+  <footer><span>Zdjęcie w tle: Chamonix, Alpy, <a href="https://www.pexels.com/photo/8253145/" target="_blank" rel="noopener">Pexels</a></span></footer>
 
   <script>
     // Dodaj ośrodek lub kamerę tutaj.
