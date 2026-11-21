@@ -11,7 +11,8 @@
       :root { --bg:#f2f6fa; --card:#ffffff; --text:#14202b; --muted:#5b7080; --accent:#0a6ed1; }
     }
     * { box-sizing: border-box; }
-    body { margin:0; font-family: system-ui, sans-serif; background:var(--bg); color:var(--text); }
+    body { margin:0; font-family: system-ui, sans-serif; color:var(--text); min-height:100vh;
+           background:var(--bg) url(background.svg?v=1) center bottom / cover no-repeat fixed; }
     header { padding:24px 16px 8px; max-width:1400px; margin:0 auto; }
     h1 { margin:0 0 4px; font-size:1.6rem; display:flex; align-items:center; }
     .logo { width:44px; height:44px; margin-right:12px; flex:none; }
