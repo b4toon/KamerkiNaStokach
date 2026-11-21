@@ -62,6 +62,7 @@
     const RESORTS = [
       { key: "czarny-gron", name: "Czarny Groń", cams: [
         { id: "czarnygron_cam_c0df65", name: "Rzyki – górna stacja", page: "https://czarnygron-stok2.webcamera.pl/" },
+        { id: "czarnygron_cam_961902", name: "Magiczna Osada", page: "https://czarnygron-magiczna-osada.webcamera.pl/" },
       ]},
       { key: "master-ski", name: "Master Ski Tylicz", cams: [
         { id: "masterski_cam_557832", name: "Tylicz – kamera 1", page: "https://masterski-tylicz-3.webcamera.pl/" },
@@ -70,9 +71,14 @@
         { id: "masterski_cam_0c8ddc", name: "Tylicz – kamera 4 (nowa)", page: "https://masterski-tylicz-4.webcamera.pl/" },
         { id: "masterski_cam_aabee6", name: "Tylicz – widok na wyciąg taśmowy", page: "https://master-ski.pl/kamery/" },
         { id: "masterski_cam_17fe2a", name: "Tylicz – kamera 6", page: "https://masterski-tylicz-5.webcamera.pl/" },
+        { id: "masterski_cam_68446d", name: "Sport – nowa kolej krzesełkowa", page: "https://master-ski-sport.webcamera.pl/" },
       ]},
       { key: "slotwiny-arena", name: "Słotwiny Arena", cams: [
         { id: "moit_cam_90a8ae", name: "Słotwiny Arena – Krynica-Zdrój", page: "https://slotwinyarena-2.webcamera.pl/" },
+        { id: "moit_cam_0b9f47", name: "Słotwiny Arena – widok z górnej stacji", page: "https://slotwinyarena.webcamera.pl/" },
+        { id: "moit_cam_79802a", name: "Słotwiny Arena – kolej krzesełkowa Słotwinka", page: "https://slotwiny-arena-slotwinka.webcamera.pl/" },
+        // bez odtwarzacza do osadzenia (webcamera.pl przekierowuje na widget): zdjęcie + link
+        { name: "Kompleks Narciarski Słotwiny", photo: "https://imageserver.webcamera.pl/miniaturki/slotwiny_cam_9eda48.jpg", page: "https://slotwiny.webcamera.pl/" },
       ]},
       // San Diego Zoo: oficjalny odtwarzacz Camzone (ten sam iframe, którego używa strona zoo)
       { key: "panda-san-diego", name: "Panda – San Diego Zoo", cams: [
@@ -196,7 +202,9 @@
         wrap.className = "frame";
 
         const camKey = cam.id || cam.name;
-        if (!cam.id && !cam.src) {
+        // photoOnly: kamera bez odtwarzacza do osadzenia, ale z odświeżanym zdjęciem
+        const photoOnly = !cam.id && !cam.src && !!cam.photo;
+        if (!cam.id && !cam.src && !cam.photo) {
           // kamera bez osadzenia: karta z linkiem do strony źródłowej
           const ph = document.createElement("div");
           ph.className = "ph";
@@ -207,7 +215,7 @@
           ph.appendChild(b1);
           ph.appendChild(s1);
           wrap.appendChild(ph);
-        } else if (mode === "live" && IS_TV) {
+        } else if (mode === "live" && IS_TV && !photoOnly) {
           // TV: zdjęcie + Odtwórz; uruchomienie jednej kamery zatrzymuje poprzednią
           const img = document.createElement("img");
           img.alt = cam.name;
@@ -233,7 +241,7 @@
           });
           wrap.appendChild(img);
           wrap.appendChild(btn);
-        } else if (mode === "live") {
+        } else if (mode === "live" && !photoOnly) {
           wrap.appendChild(makeIframe(cam, camKey));
         } else {
           const img = document.createElement("img");
@@ -249,7 +257,7 @@
         const cap = document.createElement("figcaption");
         const label = document.createElement("span");
         label.textContent = cam.name + " ";
-        if (mode === "photo" && (cam.id || cam.src)) {
+        if (photos.length && photos[photos.length - 1].cam === cam) {
           const st = document.createElement("span");
           st.className = "stamp";
           st.textContent = "(" + hhmm() + ")";
