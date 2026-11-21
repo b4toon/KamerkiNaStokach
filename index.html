@@ -71,17 +71,12 @@
       { key: "slotwiny-arena", name: "Słotwiny Arena", cams: [
         { id: "moit_cam_90a8ae", name: "Słotwiny Arena – Krynica-Zdrój", page: "https://slotwinyarena-2.webcamera.pl/" },
       ]},
-      // Pandy z Chengdu (ipanda.com): brak osadzenia, tylko linki do kamer
-      { key: "pandy-chengdu", name: "Pandy – Chengdu", cams: [
-        { name: "Dorosła panda – kamera A", page: "https://en.ipanda.com/live/chengdu/01/" },
-        { name: "Willa nr 1 – kamera A", page: "https://en.ipanda.com/live/chengdu/09/" },
-        { name: "Willa nr 1 – kamera B", page: "https://en.ipanda.com/live/chengdu/10/" },
-        { name: "Willa nr 6 – kamera A", page: "https://en.ipanda.com/live/chengdu/03/" },
-        { name: "Willa nr 6 – kamera B", page: "https://en.ipanda.com/live/chengdu/04/" },
-        { name: "Młode pandy – kamera A", page: "https://en.ipanda.com/live/chengdu/05/" },
-        { name: "Młode pandy – kamera B", page: "https://en.ipanda.com/live/chengdu/06/" },
-        { name: "Mama z młodymi – kamera A", page: "https://en.ipanda.com/live/chengdu/07/" },
-        { name: "Mama z młodymi – kamera B", page: "https://en.ipanda.com/live/chengdu/08/" },
+      // San Diego Zoo: oficjalny odtwarzacz Camzone (ten sam iframe, którego używa strona zoo)
+      { key: "panda-san-diego", name: "Panda – San Diego Zoo", cams: [
+        { name: "Giant Panda Cam – San Diego Zoo",
+          src: "https://zssd-panda2024.secureplayer.camzonecdn.com/v1.3/CamzoneStreamPlayer?iframe=yes&channel=zssd-panda2024&muted=yes&mutebutton=no&czlogourl=&toolbar=always&backgroundcolor=000000&toolbarbgcolor=ffffff&toolbaralpha=100&toolbartextcolor=000000&epostcard=yes&toolbartype=new&toolbarposition=topright",
+          photo: "https://zssd-panda2024.preview.api.camzonecdn.com/previewimage",
+          page: "https://zoo.sandiegozoo.org/cams/giant-panda-cam" },
       ]},
     ];
 
@@ -151,8 +146,9 @@
       if (saved === "photo" || saved === "live") mode = saved;
     } catch (e) {}
 
-    function photoUrl(id) {
-      return "https://imageserver.webcamera.pl/miniaturki/" + encodeURIComponent(id) + ".jpg?t=" + Date.now();
+    function photoUrl(cam) {
+      if (cam.photo) return cam.photo + (cam.photo.indexOf("?") < 0 ? "?" : "&") + "t=" + Date.now();
+      return "https://imageserver.webcamera.pl/miniaturki/" + encodeURIComponent(cam.id) + ".jpg?t=" + Date.now();
     }
     function hhmm() {
       const d = new Date();
@@ -178,7 +174,8 @@
         const wrap = document.createElement("div");
         wrap.className = "frame";
 
-        if (!cam.id) {
+        const camKey = cam.id || cam.name;
+        if (!cam.id && !cam.src) {
           // kamera bez osadzenia: karta z linkiem do strony źródłowej
           const ph = document.createElement("div");
           ph.className = "ph";
@@ -191,31 +188,31 @@
           wrap.appendChild(ph);
         } else if (mode === "live") {
           const f = document.createElement("iframe");
-          f.src = "https://player.webcamera.pl/" + encodeURIComponent(cam.id);
+          f.src = cam.src || ("https://player.webcamera.pl/" + encodeURIComponent(cam.id));
           f.title = cam.name;
           f.loading = "lazy";
           f.allowFullscreen = true;
           f.allow = "autoplay; fullscreen; picture-in-picture";
           f.setAttribute("frameborder", "0");
           const t0 = Date.now();
-          f.onload = function () { dbg("iframe OK " + cam.id + " (" + (Date.now() - t0) + " ms)"); };
-          f.onerror = function () { dbg("iframe BŁĄD " + cam.id); };
+          f.onload = function () { dbg("iframe OK " + camKey + " (" + (Date.now() - t0) + " ms)"); };
+          f.onerror = function () { dbg("iframe BŁĄD " + camKey); };
           wrap.appendChild(f);
         } else {
           const img = document.createElement("img");
           img.alt = cam.name;
           const t1 = Date.now();
-          img.onload = function () { dbg("zdjęcie OK " + cam.id + " " + img.naturalWidth + "x" + img.naturalHeight + " (" + (Date.now() - t1) + " ms)"); };
-          img.onerror = function () { dbg("zdjęcie BŁĄD " + cam.id); };
-          img.src = photoUrl(cam.id);
+          img.onload = function () { dbg("zdjęcie OK " + camKey + " " + img.naturalWidth + "x" + img.naturalHeight + " (" + (Date.now() - t1) + " ms)"); };
+          img.onerror = function () { dbg("zdjęcie BŁĄD " + camKey); };
+          img.src = photoUrl(cam);
           wrap.appendChild(img);
-          photos.push({ id: cam.id, img: img });
+          photos.push({ cam: cam, img: img });
         }
 
         const cap = document.createElement("figcaption");
         const label = document.createElement("span");
         label.textContent = cam.name + " ";
-        if (mode === "photo" && cam.id) {
+        if (mode === "photo" && (cam.id || cam.src)) {
           const st = document.createElement("span");
           st.className = "stamp";
           st.textContent = "(" + hhmm() + ")";
@@ -237,7 +234,7 @@
 
       if (photos.length) {
         timer = setInterval(function () {
-          photos.forEach(function (p) { p.img.src = photoUrl(p.id); p.stamp.textContent = "(" + hhmm() + ")"; });
+          photos.forEach(function (p) { p.img.src = photoUrl(p.cam); p.stamp.textContent = "(" + hhmm() + ")"; });
         }, REFRESH_MS);
       }
       history.replaceState(null, "", "#" + currentKey);
