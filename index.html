@@ -13,7 +13,8 @@
     * { box-sizing: border-box; }
     body { margin:0; font-family: system-ui, sans-serif; background:var(--bg); color:var(--text); }
     header { padding:24px 16px 8px; max-width:1400px; margin:0 auto; }
-    h1 { margin:0 0 4px; font-size:1.6rem; }
+    h1 { margin:0 0 4px; font-size:1.6rem; display:flex; align-items:center; }
+    .logo { width:44px; height:44px; margin-right:12px; flex:none; }
     header p { margin:0; color:var(--muted); }
     .bar { max-width:1400px; margin:0 auto; padding:12px 16px 0; display:flex; flex-wrap:wrap; }
     .bar button { margin:0 8px 8px 0; font:inherit; color:var(--text); background:var(--card);
@@ -38,7 +39,7 @@
 </head>
 <body>
   <header>
-    <h1>Kamerki na stokach</h1>
+    <h1><img class="logo" src="/favicon.svg?v=5" alt="" width="44" height="44">Kamerki na stokach</h1>
     <p>Podgląd na żywo z kilku stoków.</p>
   </header>
   <div class="bar" id="tabs" role="tablist" aria-label="Ośrodki"></div>
