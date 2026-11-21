@@ -29,7 +29,10 @@
     .tabicon { width:24px; height:24px; margin-right:8px; border-radius:5px; object-fit:contain; background:#fff; }
     .bar button[aria-selected="true"] { border-color:var(--accent); font-weight:600; }
     .bar button:focus { outline:2px solid var(--accent); outline-offset:2px; }
-    .wx { max-width:1400px; margin:0 auto; padding:8px 16px 0; display:flex; flex-wrap:wrap; }
+    .wx { max-width:1400px; margin:0 auto; padding:8px 16px 0; }
+    .wxrow { display:flex; flex-wrap:wrap; }
+    .wxlabel { width:100%; margin:0 0 4px; font-size:.8rem; font-weight:600; }
+    .wxlabel span { display:inline-block; padding:2px 8px; border-radius:6px; background:var(--card); }
     .wx .day { margin:0 8px 8px 0; padding:8px 12px; min-width:84px; text-align:center; background:var(--card); border-radius:12px; font-size:.9rem; }
     .wx .dn { font-weight:600; }
     .wx .ic { font-size:1.8rem; line-height:1.3; }
@@ -62,7 +65,7 @@
   <div class="wx" id="wx"></div>
   <div class="wxlink" id="wxlink"></div>
   <main id="cams"></main>
-  <footer><span>Zdjęcie w tle: Chamonix, Alpy, <a href="https://www.pexels.com/photo/8253145/" target="_blank" rel="noopener">Pexels</a> · Pogoda: <a href="https://www.yr.no/" target="_blank" rel="noopener">Yr.no / MET Norway</a> (zapas: <a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo</a>)</span></footer>
+  <footer><span>Zdjęcie w tle: Chamonix, Alpy, <a href="https://www.pexels.com/photo/8253145/" target="_blank" rel="noopener">Pexels</a> · Pogoda: <a href="https://www.yr.no/" target="_blank" rel="noopener">Yr.no / MET Norway</a>, <a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo</a></span></footer>
 
   <script>
     // Dodaj ośrodek lub kamerę tutaj.
@@ -196,9 +199,7 @@
       if (c >= 95) return "⛈️";
       return "☁️";
     }
-    function drawWeather(d) {
-      const box = document.getElementById("wx");
-      while (box.firstChild) box.removeChild(box.firstChild);
+    function drawWeather(d, box) {
       function add(parent, cls, text) {
         const e = document.createElement("div");
         e.className = cls;
@@ -242,13 +243,30 @@
       a.textContent = "Pełna prognoza na Yr.no ↗";
       lk.appendChild(a);
 
-      function show(d) { if (currentKey === resort.key && d && d.time) drawWeather(d); }
-      // główne źródło: Yr.no przez /api/yr (cache na CDN), zapas: Open-Meteo
-      getJson("/api/yr?k=" + encodeURIComponent(resort.key), show, function () {
-        getJson("https://api.open-meteo.com/v1/forecast?latitude=" + resort.lat + "&longitude=" + resort.lon +
-          "&daily=weather_code,temperature_2m_max,temperature_2m_min,snowfall_sum&timezone=auto&forecast_days=5",
-          function (j) { show(fromOpenMeteo(j.daily)); }, function () {});
-      });
+      function row(title) {
+        const r = document.createElement("div");
+        r.className = "wxrow";
+        const l = document.createElement("div");
+        l.className = "wxlabel";
+        const sp = document.createElement("span");
+        sp.textContent = title;
+        l.appendChild(sp);
+        r.appendChild(l);
+        r.style.display = "none";
+        box.appendChild(r);
+        return function (d) {
+          if (currentKey !== resort.key || !d || !d.time) return;
+          while (r.children.length > 1) r.removeChild(r.lastChild);
+          drawWeather(d, r);
+          r.style.display = "";
+        };
+      }
+      const showYr = row("Yr.no (MET Norway)");
+      const showOm = row("Open-Meteo");
+      getJson("/api/yr?k=" + encodeURIComponent(resort.key), showYr, function () {});
+      getJson("https://api.open-meteo.com/v1/forecast?latitude=" + resort.lat + "&longitude=" + resort.lon +
+        "&daily=weather_code,temperature_2m_max,temperature_2m_min,snowfall_sum&timezone=auto&forecast_days=5",
+        function (j) { showOm(fromOpenMeteo(j.daily)); }, function () {});
     }
 
     function render() {
