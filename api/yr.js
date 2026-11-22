@@ -11,6 +11,7 @@ const SPOTS = {
   "kamianna-ski": [49.50, 20.80, PL],
   "bialka-tatrzanska": [49.40, 20.10, PL],
   "male-ciche": [49.30, 19.93, PL],
+  "grapa-ski": [49.397, 20.175, PL],
   "kiczera-ski": [49.52, 20.35, PL],
   "panda-san-diego": [32.735, -117.149, "America/Los_Angeles"],
 };
