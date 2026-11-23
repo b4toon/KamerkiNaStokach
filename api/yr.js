@@ -6,6 +6,7 @@ const SPOTS = {
   "czarny-gron": [49.84, 19.57, PL],
   "master-ski": [49.38, 20.95, PL],
   "slotwiny-arena": [49.42, 20.96, PL],
+  "slotwiny-kompleks": [49.42, 20.96, PL],
   "jaworzyna-krynicka": [49.41, 20.95, PL],
   "zieleniec": [50.33, 16.40, PL],
   "kamianna-ski": [49.50, 20.80, PL],
